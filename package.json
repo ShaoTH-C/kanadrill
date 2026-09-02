@@ -1,0 +1,7 @@
+{
+  "name": "kanadrill",
+  "private": true,
+  "scripts": {
+    "test": "node --test && node tools/lint-data.js"
+  }
+}

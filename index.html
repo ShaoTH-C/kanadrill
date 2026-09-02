@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>五十音读音测验</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <section class="screen on" id="home">
+    <div class="masthead">
+      <h1>五十音读音测验</h1>
+      <p id="mastSub">看假名写读音，自动批改；或看读音手写假名，自己判对错</p>
+      <p class="today" id="today" hidden></p>
+      <a class="pill" href="#ref">五十音图 ›</a>
+    </div>
+
+    <div class="panel">
+      <h2>出题设置</h2>
+      <div class="field"><div class="lab">题型</div>
+        <div class="seg" id="segMode"></div></div>
+      <div class="field"><div class="lab">内容</div>
+        <div class="seg" id="segContent"></div></div>
+      <div class="field" id="fieldDiff"><div class="lab">难度</div>
+        <div class="seg" id="segDiff"></div></div>
+      <div class="field" id="fieldKanaType" hidden><div class="lab">范围（可多选）</div>
+        <div class="chips" id="chipKana"></div></div>
+      <div class="field" id="fieldKanaScript" hidden><div class="lab">假名</div>
+        <div class="seg" id="segKanaScript"></div></div>
+      <div class="field"><div class="lab">题数</div>
+        <div class="seg" id="segCount"></div></div>
+      <button class="primary" id="btnStart">开始测验</button>
+      <p class="minor" id="poolHint"></p>
+    </div>
+
+    <div class="panel">
+      <h2>错题本 <span class="cnt" id="bankCnt"></span></h2>
+      <p class="minor" id="bankInfo"></p>
+      <div class="row">
+        <button class="ghost red" id="btnBank" disabled>练错题</button>
+        <button class="ghost" id="btnClear" disabled>清空错题本</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>最近成绩</h2>
+      <ul class="hist" id="histList"></ul>
+      <button class="more" id="btnMoreHist" hidden>全部 ▾</button>
+    </div>
+  </section>
+
+  <section class="screen" id="quiz">
+    <div class="topbar">
+      <button class="exit" id="btnExit" aria-label="退出测验">×</button>
+      <div class="progress">
+        <div class="nums"><span id="qNum">1 / 20</span><span id="qTime">00:00</span></div>
+        <div class="bar"><i id="qBar"></i></div>
+      </div>
+    </div>
+    <div class="qcard" id="qCard">
+      <span class="qtag" id="qTag">第 1 题</span>
+      <span class="qtag right" id="qScript" hidden></span>
+      <div class="kword" id="qWord" lang="ja"></div>
+      <div class="fb" id="qFb" aria-live="polite"></div>
+    </div>
+    <div class="answer-row" id="rowType">
+      <input id="qInput" type="text" inputmode="text" autocomplete="off" autocapitalize="off"
+             autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="输入罗马字读音" aria-label="罗马字读音">
+      <button class="go" id="btnGo">提交</button>
+    </div>
+    <div class="answer-row" id="rowReveal" hidden>
+      <button class="primary" id="btnReveal">看答案</button>
+    </div>
+    <div class="answer-row" id="rowJudge" hidden>
+      <button class="judge no" id="btnNo">× 写错了</button>
+      <button class="judge ok" id="btnYes">✓ 写对了</button>
+    </div>
+    <div class="answer-row" id="rowNext" hidden>
+      <button class="go next" id="btnNext">下一题</button>
+    </div>
+    <div class="under">
+      <button class="giveup" id="btnGiveup">不会，看答案</button>
+      <button class="giveup" id="btnUndo" hidden></button>
+      <span class="live"><b id="liveOk">✓ 0</b><s id="liveNo">× 0</s></span>
+    </div>
+  </section>
+
+  <section class="screen" id="result">
+    <div class="sheet">
+      <span class="corner tl"></span><span class="corner tr"></span>
+      <span class="corner bl"></span><span class="corner br"></span>
+      <h2>答 题 卡</h2>
+      <div class="sub" id="resSub"></div>
+      <div class="verdict">
+        <div class="stamp"><b id="resScore">0</b><span id="resTotal">/ 20</span></div>
+        <div class="vstats">
+          正确率 <b id="resAcc">0%</b><br>
+          用时 <b id="resTime">00:00</b><br>
+          <span id="resLast" hidden>上次 <b id="resLastVal"></b></span>
+        </div>
+      </div>
+      <div class="markgrid" id="resGrid"></div>
+      <p class="weak" id="resWeak" hidden></p>
+      <div class="wrongbox" id="resWrongBox" hidden>
+        <h3 id="resWrongTitle">错题</h3>
+        <div id="resWrongList"></div>
+      </div>
+      <p class="allright" id="resPerfect" hidden>全对，这一组过关！</p>
+    </div>
+    <p class="minor banknote" id="resBankNote" hidden></p>
+    <div class="resbtns">
+      <button class="primary" id="btnAgain">再来一组</button>
+      <button class="ghost red" id="btnRedoWrong">只练这次的错题</button>
+      <button class="ghost" id="btnHome">返回设置</button>
+    </div>
+  </section>
+
+  <section class="screen" id="ref">
+    <div class="topbar refhead">
+      <a class="exit" href="#" aria-label="返回">×</a>
+      <div class="title">五十音图</div>
+      <div class="seg small" id="segRefScript"></div>
+    </div>
+    <div class="anchors" id="refAnchors"></div>
+    <div id="refBody"></div>
+    <p class="minor" id="ttsNote" hidden>此设备没有日语语音包，无法点读。</p>
+  </section>
+
+</div>
+<script src="check.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

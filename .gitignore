@@ -1,0 +1,11 @@
+node_modules
+.DS_Store
+Thumbs.db
+.idea
+*.swp
+*.log
+.claude/
+screenshots/
+TODO.md
+CLAUDE.md
+_orig/
