@@ -7,15 +7,6 @@
   --kana:'Klee One','Hiragino Sans','Yu Gothic Medium','Yu Gothic','Noto Sans JP',sans-serif;
   --ui:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC',sans-serif;
 }
-@media (prefers-color-scheme:dark){
-  :root{
-    --paper:#1A1917; --card:#23221F; --ink:#E6E2DA; --rule:#3A3936; --gray:#9C978E;
-    --blue:#7FA8DC; --blue-fill:#2E5A8A; --blue-soft:color-mix(in srgb,#7FA8DC 18%,#23221F);
-    --red:#E8645E; --red-fill:#B83E3E; --red-soft:color-mix(in srgb,#E8645E 18%,#23221F);
-    --green:#7CC47A; --green-fill:#2F6B33; --green-soft:color-mix(in srgb,#7CC47A 18%,#23221F);
-    --dot:rgba(127,168,220,.04); --mast-sub:#B9C8DC;
-  }
-}
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
