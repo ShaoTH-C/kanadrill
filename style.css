@@ -210,3 +210,30 @@ body.tts .cell:hover{border-color:var(--blue)}
   .pill{position:static;display:inline-block;margin-top:10px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- kana chart on wide screens ---------- */
+@media (min-width:900px){
+  body.wide .wrap{max-width:1000px}
+  body.wide #refBody{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;margin-top:14px}
+  body.wide #refBody .panel{margin-top:0}
+  body.wide #sec-sei{grid-column:1;grid-row:1/3}
+  body.wide #sec-dak{grid-column:2;grid-row:1}
+  body.wide #sec-rules{grid-column:2;grid-row:2}
+  body.wide #sec-yo{grid-column:1;grid-row:3}
+  body.wide #sec-gai{grid-column:2;grid-row:3}
+}
+@media (min-width:1300px){
+  body.wide .wrap{max-width:1540px}
+  body.wide #refBody{grid-template-columns:1.25fr 1.25fr .9fr 1.25fr}
+  body.wide #sec-sei{grid-column:1;grid-row:1/3}
+  body.wide #sec-dak{grid-column:2;grid-row:1}
+  body.wide #sec-rules{grid-column:2;grid-row:2}
+  body.wide #sec-yo{grid-column:3;grid-row:1/3}
+  body.wide #sec-gai{grid-column:4;grid-row:1/3}
+  body.wide .anchors{display:none}
+  body.wide .refhead{position:static;margin:0}
+  body.wide .grid{gap:4px}
+  body.wide .cell{min-height:54px}
+  body.wide .cell .kn{font-size:24px}
+  body.wide .gai .cell{min-height:52px}
+}

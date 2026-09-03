@@ -144,6 +144,7 @@ document.addEventListener('click', e => {
 const show = id => {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
   $(id).classList.add('on');
+  document.body.classList.toggle('wide', id === 'ref');
   window.scrollTo(0, 0);
 };
 function route() {
