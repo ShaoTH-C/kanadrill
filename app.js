@@ -18,9 +18,10 @@ let kstat = store.get('kana', {});                // kana -> [ok, wrong]
 let day = store.get('day', null);
 
 /* ---------------- settings ---------------- */
-const DEF = { mode: 'r', content: 'wh', diff: 'all', kanaTypes: ['sei', 'dak', 'han', 'yo'], kanaScript: 'b', count: 20 };
+const DEF = { mode: 'r', content: 'wh', diff: 'all', kanaTypes: ['sei', 'dak', 'han', 'yo'], kanaScript: 'b', countSel: '20', custom: 50 };
 const settings = Object.assign({}, DEF, store.get('settings', {}));
 settings.kanaTypes = new Set(settings.kanaTypes);
+const wantCount = () => settings.countSel === 'custom' ? settings.custom : +settings.countSel;
 const saveSettings = () => store.set('settings', { ...settings, kanaTypes: [...settings.kanaTypes] });
 
 const MODE = [['r', '认读 · 看假名写读音'], ['d', '听写 · 看读音写假名']];
@@ -29,7 +30,7 @@ const DIFF = [['0', '入门'], ['1', '进阶'], ['2', '挑战'], ['all', '全部
 const KTYPES = [['sei', '清音'], ['dak', '浊音'], ['han', '半浊音'], ['yo', '拗音'], ['gai', '外来语音']];
 const KSHORT = { sei: '清', dak: '浊', han: '半', yo: '拗', gai: '外' };
 const KSCRIPT = [['h', '平假名'], ['k', '片假名'], ['b', '混合']];
-const COUNTS = [['10', '10 题'], ['20', '20 题'], ['40', '40 题']];
+const COUNTS = [['10', '10 题'], ['20', '20 题']];
 const TYPE_LABEL = Object.fromEntries(KTYPES);
 const SCRIPT_LABEL = { h: '平假名', k: '片假名', b: '混合' };
 const label = (list, v) => (list.find(([x]) => x === v) || [])[1] || '';
@@ -102,7 +103,10 @@ function afterSetting() {
   $('fieldKanaScript').hidden = !kanaMode;
   const pool = buildPool();
   const unseen = pool.filter(it => !stat[it.k]).length;
-  $('poolHint').textContent = pool.length ? `当前范围共 ${pool.length} 个 · 未做过 ${unseen}` : '当前范围没有可出的题';
+  const n = wantCount();
+  $('poolHint').textContent = pool.length
+    ? `当前范围共 ${pool.length} 个 · 未做过 ${unseen}` + (n > pool.length ? `，不够 ${n} 题，会全部出完` : '')
+    : '当前范围没有可出的题';
   $('btnStart').disabled = pool.length === 0;
   $('btnStart').textContent = settings.mode === 'd' ? '开始听写' : '开始测验';
   saveSettings();
@@ -172,7 +176,7 @@ function history_replace() { history.replaceState(null, '', location.pathname + 
 function startFromSettings() {
   const pool = buildPool();
   if (!pool.length) return;
-  startQuiz(pick(pool, settings.count), modeLabel(), { again: startFromSettings });
+  startQuiz(pick(pool, wantCount()), modeLabel(), { again: startFromSettings });
 }
 function fitWord() {
   const el = $('qWord'), card = $('qCard');
@@ -545,7 +549,35 @@ seg($('segContent'), CONTENT, () => settings.content, v => settings.content = v)
 seg($('segDiff'), DIFF, () => settings.diff, v => settings.diff = v);
 chips($('chipKana'), KTYPES, settings.kanaTypes);
 seg($('segKanaScript'), KSCRIPT, () => settings.kanaScript, v => settings.kanaScript = v);
-seg($('segCount'), COUNTS, () => String(settings.count), v => settings.count = +v);
+// 10 / 20 / or type your own number in the third slot
+function renderCount() {
+  const el = $('segCount'); el.innerHTML = '';
+  const sync = () => {
+    el.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === settings.countSel));
+    el.querySelector('.cntbox').classList.toggle('sel', settings.countSel === 'custom');
+  };
+  COUNTS.forEach(([v, text]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = text; b.dataset.v = v;
+    b.onclick = () => { settings.countSel = v; sync(); afterSetting(); };
+    el.appendChild(b);
+  });
+  const box = document.createElement('label'); box.className = 'cntbox';
+  const inp = document.createElement('input');
+  inp.type = 'number'; inp.min = 1; inp.max = 500; inp.inputMode = 'numeric'; inp.value = settings.custom;
+  inp.setAttribute('aria-label', '自定义题数');
+  inp.onfocus = () => { if (settings.countSel !== 'custom') { settings.countSel = 'custom'; sync(); afterSetting(); } };
+  inp.oninput = () => {
+    const v = Math.min(500, Math.max(1, Math.floor(+inp.value || 0)));
+    if (v) { settings.custom = v; afterSetting(); }
+  };
+  inp.onblur = () => { inp.value = settings.custom; };
+  inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); startFromSettings(); } };
+  box.append(inp, document.createTextNode('题'));
+  el.appendChild(box);
+  sync();
+}
+renderCount();
 seg($('segRefScript'), REF_SCRIPT, () => refScript, v => { refScript = v; store.set('refScript', v); renderRef(); });
 afterSetting();
 

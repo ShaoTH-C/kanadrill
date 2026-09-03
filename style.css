@@ -182,8 +182,8 @@ body.tts .cell{cursor:pointer}
 body.tts .cell:hover{border-color:var(--blue)}
 .cell.lit{background:var(--blue-soft)}
 .cell .kn{font-family:var(--kana);font-weight:600;font-size:26px;line-height:1.1;color:var(--ink)}
-.cell .kn.pair{font-size:19px;display:flex;gap:6px}
-.cell .kn.pair i{font-style:normal;color:var(--gray)}
+.cell .kn.pair{display:flex;flex-direction:column;align-items:center;line-height:1.05;font-size:24px}
+.cell .kn.pair i{font-style:normal;color:var(--blue);font-size:17px;margin-top:2px}
 .cell .rm{font-size:11px;color:var(--gray);font-variant-numeric:tabular-nums;line-height:1.2}
 .cell.empty{border-style:dashed;background:transparent}
 .cell.note{grid-column:span 4;font-size:12px;color:var(--gray);border-style:dashed;background:transparent;line-height:1.4;padding:6px 10px}
@@ -204,7 +204,8 @@ body.tts .cell:hover{border-color:var(--blue)}
 
 @media (max-width:380px){
   .cell .kn{font-size:22px}
-  .cell .kn.pair{font-size:16px;gap:4px}
+  .cell .kn.pair{font-size:20px}
+  .cell .kn.pair i{font-size:14px}
   .gai .cell{flex-basis:calc(25% - 4px)}
   .masthead h1{padding-right:0}
   .pill{position:static;display:inline-block;margin-top:10px}
@@ -235,5 +236,15 @@ body.tts .cell:hover{border-color:var(--blue)}
   body.wide .grid{gap:4px}
   body.wide .cell{min-height:54px}
   body.wide .cell .kn{font-size:24px}
+  body.wide .panel{padding:12px 14px 14px}
+  body.wide .cell .kn.pair{font-size:21px}
+  body.wide .cell .kn.pair i{font-size:14px;margin-top:0}
   body.wide .gai .cell{min-height:52px}
 }
+.seg .cntbox{border:1.5px solid var(--rule);border-radius:8px;background:var(--card);color:var(--ink);flex:1 1 auto;min-height:38px;
+  display:flex;align-items:center;justify-content:center;gap:2px;padding:0 10px;cursor:text}
+.seg .cntbox.sel{border-color:var(--blue);background:var(--blue-soft);color:var(--blue);font-weight:600}
+.seg .cntbox input{width:52px;border:none;background:transparent;font:inherit;color:inherit;text-align:right;padding:0;outline:none;
+  font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+.seg .cntbox input::-webkit-outer-spin-button,.seg .cntbox input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.seg .cntbox:focus-within{outline:3px solid rgba(31,78,121,.45);outline-offset:2px}
