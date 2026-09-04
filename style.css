@@ -248,3 +248,15 @@ body.tts .cell:hover{border-color:var(--blue)}
   font-variant-numeric:tabular-nums;-moz-appearance:textfield}
 .seg .cntbox input::-webkit-outer-spin-button,.seg .cntbox input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .seg .cntbox:focus-within{outline:3px solid rgba(31,78,121,.45);outline-offset:2px}
+
+/* ---------- writing pad ---------- */
+.pad{margin-top:12px}
+.boxes{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.box{width:var(--box);height:var(--box);border:1.5px dashed var(--rule);border-radius:6px;background:var(--card);position:relative;
+  background-image:linear-gradient(var(--blue-soft),var(--blue-soft)),linear-gradient(var(--blue-soft),var(--blue-soft));
+  background-size:1px 100%,100% 1px;background-position:center,center;background-repeat:no-repeat}
+.box canvas{display:block;touch-action:none;-webkit-user-select:none;user-select:none;cursor:crosshair;border-radius:6px}
+.box.ok{border:2px solid var(--green);background-color:var(--green-soft)}
+.box.no{border:2px solid var(--red);background-color:var(--red-soft)}
+.padbar{display:flex;justify-content:center;gap:22px;margin-top:2px}
+.fb .why{color:var(--red);font-size:12.5px;margin-top:2px}

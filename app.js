@@ -1,4 +1,5 @@
 const { KANA, TABLES, LOOKUP, tokenize, checkAnswer, firstMismatch } = KanaCheck;
+const { verify: verifyKana } = KanaRecog;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
@@ -201,7 +202,125 @@ function twinNote(q) {
   return `<div class="yours">同音：${show(q.e)}（${q.e.row}行）· ${show(te)}（${te.row}行）</div>`;
 }
 function setRows(on) {
-  ['rowType', 'rowReveal', 'rowJudge', 'rowNext'].forEach(id => { $(id).hidden = !on.includes(id); });
+  ['rowType', 'rowCheck', 'rowJudge', 'rowNext'].forEach(id => { $(id).hidden = !on.includes(id); });
+}
+
+/* ---------------- writing pad ---------------- */
+const pad = { boxes: [], chars: [], last: null };
+const INK = '#1B2733';
+function padSetup(q) {
+  pad.chars = [...q.k]; pad.boxes = []; pad.last = null;
+  const wrap = $('padBoxes'); wrap.innerHTML = '';
+  const n = pad.chars.length, dpr = window.devicePixelRatio || 1;
+  const size = Math.max(64, Math.min(112, Math.floor(($('qCard').clientWidth - 6 * (n - 1)) / n)));
+  wrap.style.setProperty('--box', size + 'px');
+  pad.chars.forEach(() => {
+    const el = document.createElement('div'); el.className = 'box';
+    const cv = document.createElement('canvas');
+    cv.width = size * dpr; cv.height = size * dpr;
+    cv.style.width = cv.style.height = size + 'px';
+    el.appendChild(cv); wrap.appendChild(el);
+    const ctx = cv.getContext('2d');
+    ctx.scale(dpr, dpr);
+    const st = { el, cv, ctx, size, strokes: [], cur: null };
+    cv.addEventListener('pointerdown', e => padDown(st, e));
+    cv.addEventListener('pointermove', e => padMove(st, e));
+    cv.addEventListener('pointerup', e => padUp(st, e));
+    cv.addEventListener('pointercancel', e => padUp(st, e));
+    pad.boxes.push(st);
+  });
+  $('pad').hidden = false;
+  $('padBar').hidden = false;
+  padSync();
+}
+function padPen(st) {
+  const c = st.ctx;
+  c.lineCap = 'round'; c.lineJoin = 'round'; c.lineWidth = Math.max(3, st.size / 22); c.strokeStyle = INK;
+}
+function padPos(st, e) { const r = st.cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+function padDown(st, e) {
+  if (!quiz || quiz.phase !== 'ask') return;
+  e.preventDefault();
+  st.cv.setPointerCapture(e.pointerId);
+  st.cur = [padPos(st, e)];
+}
+function padMove(st, e) {
+  if (!st.cur) return;
+  e.preventDefault();
+  const p = padPos(st, e), q = st.cur[st.cur.length - 1];
+  st.cur.push(p);
+  padPen(st);
+  st.ctx.beginPath(); st.ctx.moveTo(q[0], q[1]); st.ctx.lineTo(p[0], p[1]); st.ctx.stroke();
+}
+function padUp(st) {
+  if (!st.cur) return;
+  if (st.cur.length === 1) st.cur.push([st.cur[0][0] + 0.5, st.cur[0][1] + 0.5]);
+  st.strokes.push(st.cur); st.cur = null; pad.last = st;
+  padRedraw(st);
+  padSync();
+}
+function padRedraw(st) {
+  st.ctx.clearRect(0, 0, st.size, st.size);
+  padPen(st);
+  st.strokes.forEach(s => {
+    st.ctx.beginPath(); st.ctx.moveTo(s[0][0], s[0][1]);
+    s.forEach(([x, y]) => st.ctx.lineTo(x, y));
+    st.ctx.stroke();
+  });
+}
+const padInk = () => pad.boxes.some(b => b.strokes.length);
+function padSync() { $('btnCheck').disabled = !padInk(); }
+function padUndo() {
+  if (!quiz || quiz.phase !== 'ask') return;
+  const st = pad.last && pad.last.strokes.length ? pad.last : pad.boxes.slice().reverse().find(b => b.strokes.length);
+  if (!st) return;
+  st.strokes.pop(); padRedraw(st); padSync();
+}
+function padClear() {
+  if (!quiz || quiz.phase !== 'ask') return;
+  pad.boxes.forEach(st => { st.strokes = []; padRedraw(st); });
+  padSync();
+}
+// the model shape, drawn faintly over the box after checking
+function padOverlay(st, c) {
+  const t = STROKES[c];
+  if (!t) return;
+  const k = st.size / 109, ctx = st.ctx;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(31,78,121,.45)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  t.forEach(s => { ctx.beginPath(); ctx.moveTo(s[0][0] * k, s[0][1] * k); s.forEach(([x, y]) => ctx.lineTo(x * k, y * k)); ctx.stroke(); });
+  ctx.restore();
+}
+function padCheck() {
+  if (!quiz || quiz.phase !== 'ask' || quiz.mode !== 'd' || !padInk()) return;
+  const q = quiz.items[quiz.i];
+  const results = pad.boxes.map((st, i) => {
+    const strokes = st.strokes.map(s => s.map(([x, y]) => [x / st.size * 109, y / st.size * 109]));
+    const v = strokes.length ? verifyKana(strokes, pad.chars[i]) : { ok: false, reason: 'empty' };
+    st.el.classList.add(v.ok ? 'ok' : 'no');
+    padOverlay(st, pad.chars[i]);
+    return v;
+  });
+  const bad = results.map((r, i) => ({ r, i })).filter(x => !x.r.ok);
+  quiz.phase = 'reveal';
+  revealCard(q);
+  $('btnPaper').hidden = true;
+  $('padBar').hidden = true;
+  settle(!bad.length, '', true);
+  const fb = $('qFb');
+  if (!bad.length) {
+    fb.querySelector('.big').textContent = '✓ 写对了 · 自动核对';
+    clearTimeout(autoId); autoId = setTimeout(next, 1400);
+  } else {
+    const why = bad.map(({ r, i }) => {
+      const at = pad.chars.length > 1 ? `第 ${i + 1} 格` : '';
+      if (r.reason === 'empty') return at + '没写';
+      if (r.reason === 'voice') return at + `浊点不对，像 ${r.looksLike}`;
+      return at + `不像 ${pad.chars[i]}` + (r.looksLike ? `，像 ${r.looksLike}` : '');
+    }).join('；');
+    fb.querySelector('.big').textContent = '× 核对没过';
+    fb.insertAdjacentHTML('beforeend', `<div class="why">${esc(why)}。蓝线是标准写法，看错了可以改判。</div>`);
+  }
 }
 function undoLink() {
   const u = $('btnUndo');
@@ -234,27 +353,36 @@ function renderQ() {
   if (d) {
     w.className = 'kword prompt';
     w.innerHTML = `<div class="rom">${esc(promptOf(q))}</div>` + (q.m ? `<div class="mean">（${esc(q.m)}）</div>` : '') +
-      `<div class="hint">先在纸上写${q.s === 'k' ? '片假名' : '平假名'}</div>`;
-    setRows(['rowReveal']);
+      `<div class="hint">在下面的格子里写${q.s === 'k' ? '片假名' : '平假名'}，一格一个</div>`;
+    padSetup(q);
+    setRows(['rowCheck']);
     $('btnGiveup').hidden = true;
+    $('btnPaper').hidden = false;
   } else {
     w.className = 'kword'; w.textContent = q.k; fitWord();
+    $('pad').hidden = true;
     setRows(['rowType']);
     const inp = $('qInput');
     inp.value = ''; inp.readOnly = false; inp.focus();
     const go = $('btnGo'); go.textContent = '提交'; go.className = 'go';
     $('btnGiveup').hidden = false;
+    $('btnPaper').hidden = true;
   }
   undoLink();
   live();
 }
-function reveal() {
-  if (!quiz || quiz.phase !== 'ask' || quiz.mode !== 'd') return;
-  const q = quiz.items[quiz.i];
-  quiz.phase = 'reveal';
+function revealCard(q) {
   const w = $('qWord');
   w.className = 'kword'; w.textContent = q.k; fitWord();
   $('qFb').innerHTML = `<div><span class="romaji">${esc(q.r)}</span> <span class="mean">${meanTail(q)}</span>${spkBtn(q.k)}</div>` + twinNote(q);
+}
+// wrote on paper: show the answer and grade it yourself
+function reveal() {
+  if (!quiz || quiz.phase !== 'ask' || quiz.mode !== 'd') return;
+  quiz.phase = 'reveal';
+  $('pad').hidden = true;
+  $('btnPaper').hidden = true;
+  revealCard(quiz.items[quiz.i]);
   setRows(['rowJudge']);
   lockUntil = Date.now() + 250;
   undoLink();
@@ -583,7 +711,10 @@ afterSetting();
 
 $('btnStart').onclick = startFromSettings;
 $('btnGo').onclick = () => quiz && (quiz.phase === 'ask' ? submit() : next());
-$('btnReveal').onclick = reveal;
+$('btnCheck').onclick = padCheck;
+$('btnPaper').onclick = reveal;
+$('btnPadUndo').onclick = padUndo;
+$('btnPadClear').onclick = padClear;
 $('btnYes').onclick = () => judge(true);
 $('btnNo').onclick = () => judge(false);
 $('btnNext').onclick = next;
@@ -624,12 +755,12 @@ document.addEventListener('keydown', e => {
   const d = quiz.mode === 'd';
   if (e.key === 'Enter') {
     e.preventDefault();
-    if (quiz.phase === 'ask') d ? reveal() : submit();
+    if (quiz.phase === 'ask') d ? (padInk() ? padCheck() : reveal()) : submit();
     else if (quiz.phase === 'fb') next();
     return;
   }
   if (!d) return;
-  if (e.key === ' ' && quiz.phase === 'ask') { e.preventDefault(); reveal(); }
+  if (e.key === ' ' && quiz.phase === 'ask') { e.preventDefault(); padInk() ? padCheck() : reveal(); }
   else if (quiz.phase === 'reveal' && e.key === 'ArrowRight') judge(true);
   else if (quiz.phase === 'reveal' && e.key === 'ArrowLeft') judge(false);
 });

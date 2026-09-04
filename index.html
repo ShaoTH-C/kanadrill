@@ -69,13 +69,20 @@
       <div class="kword" id="qWord" lang="ja"></div>
       <div class="fb" id="qFb" aria-live="polite"></div>
     </div>
+    <div class="pad" id="pad" hidden>
+      <div class="boxes" id="padBoxes"></div>
+      <div class="padbar" id="padBar">
+        <button class="giveup" id="btnPadUndo">撤销一笔</button>
+        <button class="giveup" id="btnPadClear">清空</button>
+      </div>
+    </div>
     <div class="answer-row" id="rowType">
       <input id="qInput" type="text" inputmode="text" autocomplete="off" autocapitalize="off"
              autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="输入罗马字读音" aria-label="罗马字读音">
       <button class="go" id="btnGo">提交</button>
     </div>
-    <div class="answer-row" id="rowReveal" hidden>
-      <button class="primary" id="btnReveal">看答案</button>
+    <div class="answer-row" id="rowCheck" hidden>
+      <button class="primary" id="btnCheck" disabled>核对</button>
     </div>
     <div class="answer-row" id="rowJudge" hidden>
       <button class="judge no" id="btnNo">× 写错了</button>
@@ -86,6 +93,7 @@
     </div>
     <div class="under">
       <button class="giveup" id="btnGiveup">不会，看答案</button>
+      <button class="giveup" id="btnPaper" hidden>在纸上写了，直接看答案</button>
       <button class="giveup" id="btnUndo" hidden></button>
       <span class="live"><b id="liveOk">✓ 0</b><s id="liveNo">× 0</s></span>
     </div>
@@ -135,6 +143,8 @@
 </div>
 <script src="check.js"></script>
 <script src="data.js"></script>
+<script src="strokes.js"></script>
+<script src="recog.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
